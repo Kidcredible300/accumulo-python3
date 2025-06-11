@@ -15,8 +15,9 @@ class AccumuloProxyConnectionContext(AccumuloContextBase):
             proxy_connection = AccumuloProxyConnection()
         self.proxy_connection = proxy_connection
 
-    def create_connector(self, user: str, auth: str):
-        login = self.proxy_connection.client.login(user, {'password': auth})
+    def create_connector(self, user: str, password: str, secret: str):
+        print(self.proxy_connection)
+        login = self.proxy_connection.client.authenticateUser(secret, user, {"password":password})
         return AccumuloConnector(self.proxy_connection.client, login)
 
 
@@ -30,7 +31,7 @@ class AccumuloConnector(AccumuloConnectorBase):
         if opts is None:
             opts = ScanOptions()
         opts = TTypeFactory.scan_options(opts)
-        return AccumuloScanner(self.proxy_client, self.login, self.proxy_client.createScanner(self.login, table, opts))
+        return AccumuloScanner(self.proxy_client, self.login, self.proxy_client.createScanner("sharedSecret", table, opts))
 
     def create_batch_scanner(self, table: str, opts: Optional[BatchScanOptions] = None):
         if opts is None:
