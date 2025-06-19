@@ -16,14 +16,14 @@ class AccumuloProxyConnectionContext(AccumuloContextBase):
         self.proxy_connection = proxy_connection
 
     def create_connector(self, user: str, password: str, secret: str):
-        print(self.proxy_connection)
         login = self.proxy_connection.client.authenticateUser(secret, user, {"password":password})
-        return AccumuloConnector(self.proxy_connection.client, login)
+        return AccumuloConnector(self.proxy_connection.client, login, secret)
 
 
 class AccumuloConnector(AccumuloConnectorBase):
 
-    def __init__(self, proxy_client: AccumuloProxy.Client, login: bytes):
+    def __init__(self, proxy_client: AccumuloProxy.Client, login: bytes, secret:str):
+        self.secret = secret
         super().__init__(login)
         self.proxy_client = proxy_client
 
@@ -44,7 +44,7 @@ class AccumuloConnector(AccumuloConnectorBase):
         if opts is None:
             opts = WriterOptions()
         opts = TTypeFactory.writer_options(opts)
-        return AccumuloWriter(self.proxy_client, self.login, self.proxy_client.createWriter(self.login, table, opts))
+        return AccumuloWriter(self.proxy_client, self.login, self.proxy_client.createWriter(self.secret, table, opts)) # LOOK!
 
     def change_user_authorizations(self, user: str, auths: Types.T_AUTHORIZATION_SET):
         self.proxy_client.changeUserAuthorizations(self.login, user, auths)
